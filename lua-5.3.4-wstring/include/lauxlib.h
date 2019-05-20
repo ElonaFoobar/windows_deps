@@ -1,5 +1,5 @@
 /*
-** $Id: lauxlib.h,v 1.128 2014/10/29 16:11:17 roberto Exp $
+** $Id: lauxlib.h,v 1.131 2016/12/06 14:54:31 roberto Exp $
 ** Auxiliary functions for building Lua libraries
 ** See Copyright Notice in lua.h
 */
@@ -16,8 +16,16 @@
 
 
 
-/* extra error code for 'luaL_load' */
+/* extra error code for 'luaL_loadfilex' */
 #define LUA_ERRFILE     (LUA_ERRERR+1)
+
+
+/* key, in the registry, for table of loaded modules */
+#define LUA_LOADED_TABLE	"_LOADED"
+
+
+/* key, in the registry, for table of preloaded loaders */
+#define LUA_PRELOAD_TABLE	"_PRELOAD"
 
 
 typedef struct luaL_Reg {
@@ -61,6 +69,7 @@ LUALIB_API int (luaL_error) (lua_State *L, const char *fmt, ...);
 
 LUALIB_API int (luaL_checkoption) (lua_State *L, int arg, const char *def,
                                    const char *const lst[]);
+
 #ifdef _WIN32
 LUALIB_API int (luaL_fileresult) (lua_State *L, int stat, const wchar_t *fname);
 #else
@@ -68,7 +77,7 @@ LUALIB_API int (luaL_fileresult) (lua_State *L, int stat, const char *fname);
 #endif
 LUALIB_API int (luaL_execresult) (lua_State *L, int stat);
 
-/* pre-defined references */
+/* predefined references */
 #define LUA_NOREF       (-2)
 #define LUA_REFNIL      (-1)
 
@@ -132,6 +141,25 @@ LUALIB_API void (luaL_requiref) (lua_State *L, const char *modname,
 #define luaL_opt(L,f,n,d)	(lua_isnoneornil(L,(n)) ? (d) : f(L,(n)))
 
 #define luaL_loadbuffer(L,s,sz,n)	luaL_loadbufferx(L,s,sz,n,NULL)
+
+/*
+** {======================================================================
+** wstring patch API
+** =======================================================================
+*/
+
+
+LUALIB_API const wchar_t *(luaL_optwstring) (lua_State *L, int index, const wchar_t *def);
+LUALIB_API const wchar_t *(luaL_optlwstring) (lua_State *L, int index, const wchar_t *def, size_t *length);
+LUALIB_API const wchar_t *(luaL_checkwstring) (lua_State *L, int index);
+LUALIB_API const wchar_t *(luaL_checklwstring) (lua_State *L, int index, size_t *length);
+LUALIB_API int	(luaL_loadwfile) (lua_State *L, const wchar_t *filename);
+
+#define luaL_dowfile(L, fn)	\
+	(luaL_loadwfile(L, fn) || lua_pcall(L, 0, LUA_MULTRET, 0))
+
+/* }====================================================================== */
+
 
 
 /*
